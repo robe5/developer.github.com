@@ -33,8 +33,8 @@ module GitHub
           end
         end
 
-        lines << "X-RateLimit-Limit: 5000"
-        lines << "X-RateLimit-Remaining: 4999"
+        lines << "X-RateLimit-Limit: 3000"
+        lines << "X-RateLimit-Remaining: 2999"
 
         %(<pre class="#{css_class}"><code>#{lines * "\n"}</code></pre>\n)
       end
@@ -50,8 +50,27 @@ module GitHub
           else Resources.const_get(key.to_s.upcase)
         end
 
+
         hash = yield hash if block_given?
 
+        %(<pre class="highlight"><code class="language-javascript">) +
+          JSON.pretty_generate(hash) + "</code></pre>"
+      end
+      # TODO: refactorize
+      def json_data(key)
+        hash = case key
+          when Hash
+            h = {}
+            key.each { |k, v| h[k.to_s] = v }
+            h
+          when Array
+            key
+          else Resources.const_get(key.to_s.upcase)
+        end
+
+
+        hash = yield hash if block_given?
+        hash = {"data" => hash}
         %(<pre class="highlight"><code class="language-javascript">) +
           JSON.pretty_generate(hash) + "</code></pre>"
       end
@@ -61,7 +80,72 @@ module GitHub
         res = CGI.escapeHTML(response)
         hs + %(<pre class="highlight"><code>) + res + "</code></pre>"
       end
+
+      def resource(key)
+        Resources.const_get(key.to_s.upcase)
+      end
     end
+
+
+    STORE = {
+      "id"          => 1,
+      "login"       => "test",
+      "name"        => "Tienda de ejemplo",
+      "description" => "",
+      "email"       => "test@example.com",
+      "currency"    => "EUR"
+    }
+
+    SELL_OPTIONS = [
+      {
+          "id" => 157353,
+          "name1" => "Grande",
+          "name2" => nil,
+          "name3" => nil,
+          "previous_price_cents" => nil,
+          "price_cents" => 538,
+          "shipping_time" => nil,
+          "sku" => "camiseta-estampada-grande",
+          "stock" => 0,
+          "stock_policy" => 0,
+          "units_sold" => 0,
+          "weight" => nil
+        }
+    ]
+
+    IMAGES = [
+      {
+          "id" => 329321,
+          "image_content_type" => "image/jpeg",
+          "image_file_name" => "image1.jpg",
+          "image_file_size" => 27323,
+          "position" => 1
+        }
+    ]
+
+    PRODUCT = {
+      "id" => 175595,
+      "handle" => "camiseta-estampada",
+      "title" => "Camiseta estampada",
+      "categories" => [
+        { "id" => 65822 },
+        { "id" => 65833 }
+      ],
+      "content" => "&lt;p&gt;Camiseta estampada de estilo...&lt;/p&gt;",
+      "sellOptions" => [SELL_OPTIONS.first],
+      "highlighted" => false,
+      "isDraft" => false,
+      "commentsRating" => 0.0,
+      "file?" => true,
+      "file_url" => "/download_product_file/175595",
+      "maxDownloads" => 0,
+      "relevance" => nil,
+      "images" => [IMAGES.first],
+      "tags" => [],
+      "fields" => [],
+      "createdAt" => "2011/11/21 19:05:32 +0100",
+      "updatedAt" => "2011/11/21 19:05:32 +0100"
+    }
 
     USER = {
       "login"        => "octocat",
